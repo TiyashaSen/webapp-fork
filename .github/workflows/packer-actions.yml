@@ -35,43 +35,6 @@ jobs:
       - name: Packer build
         run: packer build ./gcp.pkr.hcl
 
-        name: packer-actions
-on:
-  pull_request:
-    types:
-      - closed
-
-jobs:
-  packer-build:
-    runs-on: ubuntu-latest
-
-    if: ${{github.event.pull_request.merged==true}}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Copy to repository after zip
-        run: cd .. && zip -r webapp.zip webapp && cp webapp.zip webapp/scripts/webapp.zip && cd webapp
-
-      - name: Authenticate with GCP
-        id: "auth"
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: "${{ secrets.GCP_SA_KEY }}"
-
-      - name: Setup `packer`
-        uses: hashicorp/setup-packer@main
-        id: setup
-        with:
-          version: "1.10.1"
-
-      - name: Run `packer init`
-        id: init
-        run: packer init ./gcp.pkr.hcl
-
-      - name: Packer build
-        run: packer build ./gcp.pkr.hcl
-
       - name: Create instance template
         run: |
           gcloud compute instance-templates create ${{ secrets.INSTANCE_TEMPLATE }} \
@@ -98,4 +61,3 @@ jobs:
           gcloud compute instance-groups managed wait-until ${{ secrets.MANAGED_INSTANCE_GROUP_NAME }} \
           --version-target-reached \
           --region="${{ secrets.INSTANCE_TEMPLATE_REGION }}"
-
